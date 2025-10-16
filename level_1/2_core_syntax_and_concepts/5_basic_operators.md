@@ -62,14 +62,14 @@
 
 - Used for binary operations on integers
 
-| Operator | Description | Example    | Result |
-| -------- | ----------- | ---------- | ------ |
-| `&`      | Bitwise AND | `5 & 3`    | `1`    |
-| `|`      | Bitwise OR  | `5 | 3`    | `7`    |
-| `^`      | Bitwise XOR | `5 ^ 3`    | `6`    |
-| `~`      | Bitwise NOT | `~5`       | `-6`   |
-| `<<`     | Left shift  | `5 << 1`   | `10`   |
-| `>>`     | Right shift | `5 >> 1`   | `2`    |
+| Operator | Description | Example  | Result |
+| -------- | ----------- | -------- | ------ |
+| `&`      | Bitwise AND | `5 & 3`  | `1`    |
+| `\|`     | Bitwise OR  | `5 \| 3` | `7`    |
+| `^`      | Bitwise XOR | `5 ^ 3`  | `6`    |
+| `~`      | Bitwise NOT | `~5`     | `-6`   |
+| `<<`     | Left shift  | `5 << 1` | `10`   |
+| `>>`     | Right shift | `5 >> 1` | `2`    |
 
 **Interview Tip:** Bitwise operations are common in low-level and optimization questions.
 
@@ -108,7 +108,7 @@
 | `<<`, `>>`                   |
 | `&`                          |
 | `^`                          |
-| `|`                          |
+| `\|`                         |
 | Comparison (`==`, `!=`, etc) |
 | `not`                        |
 | `and`                        |
