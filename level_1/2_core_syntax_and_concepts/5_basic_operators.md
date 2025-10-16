@@ -63,9 +63,9 @@
 - Used for binary operations on integers
 
 | Operator | Description | Example    | Result |
-| -------- | ----------- | ---------- | ------ | --- | --- |
+| -------- | ----------- | ---------- | ------ |
 | `&`      | Bitwise AND | `5 & 3`    | `1`    |
-| `        | `           | Bitwise OR | `5     | 3`  | `7` |
+| `|`      | Bitwise OR  | `5 | 3`    | `7`    |
 | `^`      | Bitwise XOR | `5 ^ 3`    | `6`    |
 | `~`      | Bitwise NOT | `~5`       | `-6`   |
 | `<<`     | Left shift  | `5 << 1`   | `10`   |
@@ -99,7 +99,7 @@
 - Parentheses `()` can override precedence
 
 | Highest to Lowest Precedence |
-| ---------------------------- | --- |
+| ---------------------------- |
 | `()` (parentheses)           |
 | `**` (exponent)              |
 | `+`, `-`, `~` (unary)        |
@@ -108,7 +108,7 @@
 | `<<`, `>>`                   |
 | `&`                          |
 | `^`                          |
-| `                            | `   |
+| `|`                          |
 | Comparison (`==`, `!=`, etc) |
 | `not`                        |
 | `and`                        |
