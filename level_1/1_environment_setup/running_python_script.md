@@ -40,19 +40,40 @@ Running Python scripts from the command line is a fundamental skill for any deve
 
 ---
 
-## 3. Running Scripts in Virtual Environments
+## 3. Creating and Using Virtual Environments
 
-- Activate your environment:
-  - **venv:**
-    ```sh
-    source venv/bin/activate  # macOS/Linux
-    .\venv\Scripts\activate  # Windows
-    ```
-  - **uv:**
-    ```sh
-    source myenv/bin/activate
-    ```
-- Run your script as above.
+### Creating Virtual Environments
+
+- **Using venv (built-in):**
+
+  ```sh
+  python -m venv myenv
+  # or
+  python3 -m venv myenv
+  ```
+
+- **Using uv (modern alternative):**
+  ```sh
+  uv venv myenv
+  ```
+
+### Activating Virtual Environments
+
+- **venv:**
+
+  ```sh
+  source myenv/bin/activate  # macOS/Linux
+  .\myenv\Scripts\activate  # Windows
+  ```
+
+- **uv:**
+  ```sh
+  source myenv/bin/activate
+  ```
+
+### Running Scripts in Virtual Environments
+
+- Activate your environment first, then run your script as above.
 
 ---
 
