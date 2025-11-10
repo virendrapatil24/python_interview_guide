@@ -152,15 +152,21 @@ f(1, 2, pos_or_kwd=3, kwd1=4, kwd2=5)
 You can return multiple values by separating them with commas. They are automatically packed into a tuple.
 
 ```python
-def get_min_max(numbers):
-    """Returns the minimum and maximum of a list."""
+def find_range(numbers):
+    """Returns the smallest and largest numbers from a list."""
     if not numbers:
-        return None, None # Return a tuple of None
-    return min(numbers), max(numbers)
+        return None, None
+    smallest = largest = numbers[0]
+    for num in numbers:
+        if num < smallest:
+            smallest = num
+        if num > largest:
+            largest = num
+    return smallest, largest
 
-nums = [1, 5, 3, 9, 4]
-min_val, max_val = get_min_max(nums) # The returned tuple is unpacked
-print(f"Min: {min_val}, Max: {max_val}") # Output: Min: 1, Max: 9
+numbers = [1, 5, 3, 9, 4]
+lowest, highest = find_range(numbers)
+print(f"Lowest: {lowest}, Highest: {highest}")  # Output: Lowest: 1, Highest: 9
 ```
 
 ---
