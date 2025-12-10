@@ -58,7 +58,7 @@ class Dog(Animal):
         # self.__reveal_age() # AttributeError: 'Dog' object has no attribute '_Dog__reveal_age'
 
         # 6. Name Mangling (Technically possible, but bad practice)
-        print("Accessing private method via name mangling:")
+        print("Accessing private method via name mangling")
         self._Animal__reveal_age()
 
 
