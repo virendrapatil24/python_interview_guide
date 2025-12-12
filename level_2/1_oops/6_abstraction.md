@@ -54,6 +54,16 @@ print(f"Fish says: {fish.make_sound()}")
 print(f"Fish moves: {fish.move()}")
 ```
 
+### Interfaces in Python
+
+Python does not have a native `interface` keyword like Java or C#. However, **Abstract Base Classes (ABCs)** are used to create interfaces.
+
+An **Interface** in Python is essentially an ABC where:
+1.  All methods are `@abstractmethod`.
+2.  It contains no implementation details (no concrete methods).
+
+Classes can "implement" an interface by inheriting from this ABC and defining all its methods.
+
 ## Common Interview Questions
 
 **Q: What is an Abstract Base Class (ABC)?**
