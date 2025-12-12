@@ -105,3 +105,9 @@ unique_squares = {x*x for x in nums}
 
 **Q: What is a Generator Expression?**
 - **A:** It looks like a tuple comprehension `(x for x in range(10))`, but there is no such thing as a "tuple comprehension". This syntax creates a **Generator**, which yields items one by one instead of creating the entire list in memory. (See the Generators section).
+
+**Q: Why is there no Tuple Comprehension? (Technical Deep Dive)**
+- **A:** This is a common trick question.
+    -   **Syntactic Ambiguity:** Parentheses `()` are already used for **Generator Expressions**. If `(x for x in iterable)` created a tuple, we would lose the syntax for generators, which are crucial for memory efficiency.
+    -   **Immutability:** Tuples are immutable. A comprehension typically implies building a collection element-by-element (like `list.append()`). Since tuples cannot be appended to, constructing one this way would essentially require building a list first and converting it to a tuple, or using internal optimizations that generator expressions already provide.
+    -   **Workaround:** To get a tuple, simply cast the generator expression: `tuple(x for x in iterable)`.
