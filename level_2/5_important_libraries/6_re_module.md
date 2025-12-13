@@ -1,0 +1,132 @@
+# Deep Dive: The `re` Module (Regex)
+
+Regular Expressions are a language within a language. Python's `re` module implements a standard Regex engine (NFA-based) which is powerful but prone to performance pitfalls if misunderstood.
+
+---
+
+## 1. Engine Internals: The Backtracking NFA
+
+Python uses a **Backtracking NFA** (Non-Deterministic Finite Automaton) engine.
+*   **Mechanism**: It tries a path, and if it fails, it "backtracks" (rewinds) to try another alternative.
+*   **Implication**: In worst-case scenarios, the checking time can be **Exponential** relative to the input string length.
+
+---
+
+## 2. The Danger: Catastrophic Backtracking (ReDoS)
+
+**ReDoS** (Regular Expression Denial of Service) occurs when a regex takes years to compute on a relatively short string.
+
+### The Trap
+Pattern: `(a+)+$` on string `aaaaaaaaaaaaaaaaaaaa!`.
+*   The engine tries to match the `a+` inside.
+*   Then it tries to match the outer `+`.
+*   When it hits the `!`, it fails and backtracks to try every possible combination of splitting the `a`'s between the inner and outer groups.
+
+### The Solution: Atomic Grouping (Simulated)
+Python `re` (before 3.11) did not support true Atomic Groups `(?>...)` natively (the `regex` module does). However, you can simulate it with lookaheads.
+
+**Trick**: `(?=(...))\1`
+This matches `...` in a lookahead (which is atomic-ish) and then consumes it with a backreference.
+
+```python
+import re
+import time
+
+# Bad: Infinite backtracking
+bad_pattern = re.compile(r"(a+)+$")
+
+# Safe: Atomic simulation (or just fixing the logic to r"a+$")
+safe_pattern = re.compile(r"(?=(a+))\1$")
+
+text = "a" * 30 + "!"
+
+start = time.time()
+try:
+    # safe_pattern.match(text) # Fast
+    pass
+except Exception:
+    pass
+print("Finished")
+```
+
+---
+
+## 3. Advanced Patterns: Lookarounds
+
+Lookarounds allow you to match a position based on what is ahead or behind it, **without consuming characters**.
+
+### Positive Lookahead `(?=...)`
+"Match X only if followed by Y": `X(?=Y)`
+
+```python
+import re
+
+text = "IsaacAsimov IsaacNewton"
+# Match 'Isaac' only if followed by 'Newton'
+pattern = r"Isaac(?=Newton)"
+matches = re.findall(pattern, text)
+print(matches) # ['Isaac'] (The first one is skipped)
+```
+
+### Negative Lookbehind `(?<!...)`
+"Match Y only if NOT preceded by X": `(?<!X)Y`
+
+```python
+text = "100 USD 500 EUR"
+# Match numbers NOT preceded by space (beginning of string)
+# Actually, let's match 'USD' not preceded by '100 '
+pattern = r"(?<!100 )USD"
+print(re.search(pattern, text)) # None
+```
+
+---
+
+## 4. Named Groups and Backreferences
+
+Naming groups makes complex regex readable and allows referencing repeats.
+
+### `(?P<name>...)`
+```python
+import re
+
+log_line = "ERROR [2023-01-01]: Connection failed"
+pattern = r"(?P<level>[A-Z]+) \[(?P<date>[\d-]+)\]: (?P<msg>.+)"
+
+match = re.search(pattern, log_line)
+if match:
+    print(match.group('level')) # ERROR
+    print(match.group('date'))  # 2023-01-01
+```
+
+### Backreferences `\1` or `(?P=name)`
+Matching the **same text** identified by a previous capture group.
+
+```python
+# Match HTML tags: <b>Bold</b>
+# <([a-z]+)> matches start tag
+# .*? lazily matches content
+# </\1> matches the closing tag with SAME name as group 1
+pattern = r"<([a-z]+)>.*?</\1>"
+
+text = "<b>Bold</b> <i>Italic</i>"
+print(re.findall(pattern, text)) # ['b', 'i']
+```
+
+---
+
+## 5. Performance Flags: `re.VERBOSE` and `re.compile`
+
+Always use `re.VERBOSE` for complex regex. It ignores whitespace and comments inside the pattern.
+
+```python
+email_pattern = re.compile(r"""
+    ^                   # Start of string
+    [a-zA-Z0-9_.+-]+    # Username
+    @                   # Separator
+    [a-zA-Z0-9-]+       # Domain
+    \.[a-zA-Z0-9-.]+    # TLD
+    $                   # End of string
+""", re.VERBOSE)
+```
+
+**Pre-compilation**: `re.compile()` caches the state machine. If you use a regex inside a loop, always compile it outside the loop.
