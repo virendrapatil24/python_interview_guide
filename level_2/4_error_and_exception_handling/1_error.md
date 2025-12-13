@@ -20,8 +20,8 @@ Raised when an attribute reference (e.g., `obj.attr`) or assignment failed. This
 ```python
 my_list = [1, 2, 3]
 try:
-    # Typo: it should be 'append'
-    my_list.append(4)
+    # Typo: it should be 'append', but we wrote 'apend'
+    my_list.apend(4)
 except AttributeError as e:
     print(f"Error: {e}")
 ```
