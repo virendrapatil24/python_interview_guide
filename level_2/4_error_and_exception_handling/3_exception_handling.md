@@ -64,33 +64,87 @@ import logging
 
 try:
     main_loop()
-except Exception: # NOTE: Does not catch SystemExit or KeyboardInterrupt
-    logging.exception("Fatal error in main loop")
+except Exception as e: # NOTE: Does not catch SystemExit or KeyboardInterrupt
+    logging.exception(f"Fatal error in main loop: {e}")
 ```
 
 ---
 
 ## 3. Nested Try Blocks & Propagation
 
-Exceptions propagate up the call stack. A `try` block inside another `try` block allows for granular handling.
+Exceptions bubble up (propagate) through the call stack until they encounter a matching `except` block. Nesting `try` blocks allows you to handle specific, recoverable errors locally while letting more severe or unexpected errors ripple up to a general handler.
+
+### How Propagation Works
+1.  **Inner Try**: Python attempts to execute code here.
+2.  **Inner Exception**: Upon an error, Python checks the **inner** `except` blocks.
+3.  **Match Found**: If a match is found, the inner handler executes, and execution continues **after the inner block** (not the outer one, unless re-raised).
+4.  **No Match (Propagation)**: If no match is found, the exception bubbles up to the **outer** `try` block.
+5.  **Outer Exception**: Python now checks the **outer** `except` blocks.
+
+### Detailed Example
 
 ```python
-try:
-    # Outer block: Handles general failures
+def main_process():
+    print("Start Main Process")
     try:
-        # Inner block: Handles specific file parsing issues
-        parse_config_file()
-    except ValueError:
-        print("Config file format is bad, using defaults.")
-        use_defaults()
-    
-    # If parse_config_file() raised a generic OSError, the inner except
-    # missed it, so it naturally bubbles up to here.
-    connect_to_db()
-
-except OSError:
-    print("System level IO failure, aborting.")
+        # Outer block: The safety net
+        print("  Entering Outer Try")
+        
+        try:
+            # Inner block: The specific risky operation
+            print("    Attempting risky operation...")
+            # Uncomment one line below to test different scenarios:
+            # raise ValueError("Invalid input")   # Scenario A
+            # raise OSError("Disk full")          # Scenario B
+            # raise KeyError("Missing key")       # Scenario C (Uncaught)
+            print("    Success!")
+            
+        except ValueError as e:
+            # Handles ONLY ValueError locally
+            print(f"    (Inner Catch) Recovered from: {e}")
+            # Execution continues in the outer block
+        
+        print("  Continuing Outer Block execution...")
+        
+    except OSError as e:
+        # Handles OSError from ANYWHERE in the outer block (including inner)
+        print(f"  (Outer Catch) System error detected: {e}")
+        
+    except Exception as e:
+        # Catch-all for anything else (like KeyError)
+        print(f"  (Outer Catch) Unexpected crash: {e}")
+        
+    print("End Main Process")
 ```
+
+### Execution Scenarios
+Here is exactly what happens in different situations based on the code above:
+
+**Scenario A: `ValueError` is raised**
+1. Inner `try` raises `ValueError`.
+2. check inner `except ValueError`: **MATCH**.
+3. Prints: `(Inner Catch) Recovered from: Invalid input`.
+4. Inner block finishes.
+5. Outer block continues: Prints `Continuing Outer Block execution...`.
+6. Prints: `End Main Process`.
+
+**Scenario B: `OSError` is raised**
+1. Inner `try` raises `OSError`.
+2. Check inner `except ValueError`: **NO MATCH**.
+3. Exception **propagates** to outer `try`.
+4. Outer block stops executing immediately (skips `Continuing Outer Block...`).
+5. Check outer `except OSError`: **MATCH**.
+6. Prints: `(Outer Catch) System error detected: Disk full`.
+7. Prints: `End Main Process`.
+
+**Scenario C: `KeyError` is raised** (Unanticipated error)
+1. Inner `try` raises `KeyError`.
+2. Check inner `except`: **NO MATCH**.
+3. Propagates to outer `try`.
+4. Check outer `except OSError`: **NO MATCH**.
+5. Check outer `except Exception`: **MATCH**.
+6. Prints: `(Outer Catch) Unexpected crash: Missing key`.
+7. Prints: `End Main Process`.
 
 ---
 
@@ -110,25 +164,51 @@ except PaymentError:
 
 ## 5. Exception Chaining (PEP 3134)
 
-When writing libraries or abstraction layers, you often want to wrap a low-level error (like `KeyError`) into a high-level error (like `ConfigurationError`) without losing the original context.
+Exception chaining solves a specific problem: **How do we report a high-level error to the user without losing the technical details of what actually went wrong?**
 
-**Implicit Chaining**: Happens automatically if an error occurs inside an `except` block.
-**Explicit Chaining**: Using `raise ... from ...`.
+### The Problem
+Imagine you are writing a database library. If a low-level `socket.error` occurs, you don't want to crash the user's app with a raw socket error. You want to tell them "Database Connection Failed". *But*, for debugging, you still need to see that it was a socket error, not an authentication error.
+
+### Explicit Chaining (`raise ... from e`)
+This allows you to wrap an exception while pointing to the original cause. The `__cause__` attribute is set on the new exception.
 
 ```python
-class DatabaseError(Exception):
+class DatabaseConnectionError(Exception):
     pass
 
-def connect():
+def connect_to_db():
     try:
-        _internal_connect()
-    except ConnectionRefusedError as original_error:
-        # Wrap the error, but attach the original cause
-        raise DatabaseError("Could not connect to DB") from original_error
+        # Simulate a low-level networking error
+        raise ConnectionRefusedError("Port 5432 unreachable")
+    except ConnectionRefusedError as original_e:
+        # Wrap it in our custom error, but Keep the Link
+        raise DatabaseConnectionError("DB Connection Failed") from original_e
 
-# When the user sees this traceback, Python will print:
-# "The above exception was the direct cause of the following exception:"
+# Execution Result:
+# 1. Python prints the ConnectionRefusedError traceback.
+# 2. Python prints: "The above exception was the direct cause of the following exception:"
+# 3. Python prints the DatabaseConnectionError traceback.
 ```
+
+### Suppressing Context (`raise ... from None`)
+Sometimes, the original error is "noise" or implementation detail that you explicitly want to hide from the user (or the logs). You can use `from None` to disable chaining.
+
+```python
+def load_config():
+    try:
+        # We try to open a file, but it fails
+        raise FileNotFoundError("config.json missing")
+    except FileNotFoundError:
+        # We don't care WHY it failed, just that configuration is invalid.
+        # "from None" tells Python: "Forget the previous error, start fresh here."
+        raise RuntimeError("Configuration failed to load") from None
+
+# Execution Result:
+# Python ONLY prints the RuntimeError. The FileNotFoundError is gone.
+```
+
+### Implicit Chaining
+If you raise an exception *while handling another exception* (and don't use `from`), Python allows you to see both, noting that "During handling of the above exception, another exception occurred". This usually indicates a bug in your error handler (e.g., trying to log an error to a file that is read-only).
 
 ---
 
