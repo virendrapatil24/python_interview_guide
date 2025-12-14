@@ -1,10 +1,64 @@
 # Deep Dive: The `re` Module (Regex)
 
-Regular Expressions are a language within a language. Python's `re` module implements a standard Regex engine (NFA-based) which is powerful but prone to performance pitfalls if misunderstood.
+Regular Expressions (Regex) are a powerful tool for matching patterns in text. Python's `re` module provides full support for Perl-like regular expressions.
 
 ---
 
-## 1. Engine Internals: The Backtracking NFA
+## 1. common Methods (The Daily Drivers)
+
+Here are the functions you will use 90% of the time.
+
+### `re.match` vs `re.search`
+This is the most common interview question.
+*   **`match()`**: Checks for a match only at the **beginning** of the string.
+*   **`search()`**: Scans through the **entire string** looking for the first location where the pattern produces a match.
+
+```python
+import re
+
+text = "Hello Python World"
+
+# Match checks start of string
+print(re.match(r"Python", text))  # None (starts with Hello)
+print(re.match(r"Hello", text))   # <re.Match object>
+
+# Search scans everywhere
+print(re.search(r"Python", text)) # <re.Match object>
+```
+
+### `re.findall` vs `re.finditer`
+*   **`findall()`**: Returns a **list** of all non-overlapping matches.
+*   **`finditer()`**: Returns an **iterator** yielding match objects. (Better for memory).
+
+```python
+text = "id=123, id=456, id=789"
+ids = re.findall(r"\d+", text)
+print(ids) # ['123', '456', '789']
+```
+
+### `re.sub` (Search and Replace)
+Replaces the occurrences of the pattern with a replacement string.
+
+```python
+text = "Contact: 123-456-7890"
+# Mask the digits
+masked = re.sub(r"\d", "X", text)
+print(masked) # Contact: XXX-XXX-XXXX
+```
+
+### `re.split`
+Split string by the occurrences of the pattern.
+
+```python
+text = "apple, orange; banana: grape"
+# Split by comma, semicolon, or colon (and optional space)
+fruits = re.split(r"[,;:]\s*", text)
+print(fruits) # ['apple', 'orange', 'banana', 'grape']
+```
+
+---
+
+## 2. Engine Internals: The Backtracking NFA
 
 Python uses a **Backtracking NFA** (Non-Deterministic Finite Automaton) engine.
 *   **Mechanism**: It tries a path, and if it fails, it "backtracks" (rewinds) to try another alternative.
@@ -12,7 +66,7 @@ Python uses a **Backtracking NFA** (Non-Deterministic Finite Automaton) engine.
 
 ---
 
-## 2. The Danger: Catastrophic Backtracking (ReDoS)
+## 3. The Danger: Catastrophic Backtracking (ReDoS)
 
 **ReDoS** (Regular Expression Denial of Service) occurs when a regex takes years to compute on a relatively short string.
 
@@ -51,7 +105,7 @@ print("Finished")
 
 ---
 
-## 3. Advanced Patterns: Lookarounds
+## 4. Advanced Patterns: Lookarounds
 
 Lookarounds allow you to match a position based on what is ahead or behind it, **without consuming characters**.
 
@@ -81,7 +135,7 @@ print(re.search(pattern, text)) # None
 
 ---
 
-## 4. Named Groups and Backreferences
+## 5. Named Groups and Backreferences
 
 Naming groups makes complex regex readable and allows referencing repeats.
 
@@ -114,7 +168,7 @@ print(re.findall(pattern, text)) # ['b', 'i']
 
 ---
 
-## 5. Performance Flags: `re.VERBOSE` and `re.compile`
+## 6. Performance Flags: `re.VERBOSE` and `re.compile`
 
 Always use `re.VERBOSE` for complex regex. It ignores whitespace and comments inside the pattern.
 
