@@ -37,7 +37,7 @@ except ValidationError as e:
 Use `Field` to add metadata (constraints, defaults, descriptions).
 
 ```python
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 class Product(BaseModel):
     name: str
@@ -47,8 +47,18 @@ class Product(BaseModel):
 # Valid
 p = Product(name="Hammer", price=9.99, sku="HAM-001")
 
-# Invalid (Price constraint)
-# Product(name="Hammer", price=-5, sku="HAM") # Raises ValidationError
+# Handling Validation Errors Gracefully
+try:
+    Product(name="Hammer", price=-5, sku="HAM")
+except ValidationError as e:
+    print(" Validation Failed!")
+    
+    # Iterate over structured error list
+    for err in e.errors():
+        field = err['loc'][0]   # e.g., 'price'
+        # Pydantic auto-generates this message based on the failed constraint (gt=0)
+        msg = err['msg']        # e.g., 'Input should be greater than 0'
+        print(f" -> Field '{field}': {msg}")
 ```
 
 **Common Constraints**: `gt`, `lt`, `ge`, `le` (numbers); `min_length`, `max_length`, `pattern` (strings).
