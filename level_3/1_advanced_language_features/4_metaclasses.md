@@ -85,20 +85,29 @@ print(MyClass.FOO) # "bar"
 When should you actually use this?
 
 ### 1. Verification / Validation
-Ensure that classes conform to a standard.
-*   Example: "All subclasses of `Plugin` must implement `process()` method."
+Ensure that classes conform to a standard. 
+*   **Concept**: You are building an App that allows users to write their own extensions ("Plugins"). You want to guarantee that every plugin is valid before the app starts.
+*   **Goal**: "All subclasses of `Plugin` must implicitly implement a `process()` method."
 
 ```python
 class InterfaceMeta(type):
     def __new__(cls, name, bases, dct):
-        if 'process' not in dct:
+        # We skip the base class 'Plugin' itself from this check
+        if name != 'Plugin' and 'process' not in dct:
             raise TypeError(f"Class {name} missing mandatory 'process' method")
         return super().__new__(cls, name, bases, dct)
 
-class Base(metaclass=InterfaceMeta):
-    def process(self): pass
+class Plugin(metaclass=InterfaceMeta):
+    """Base class for all plugins."""
+    pass
 
-# class BadPlugin(Base): pass # Raises TypeError
+# This fails because it doesn't define 'process' in its body
+# class BrokenPlugin(Plugin): pass 
+
+# This works
+class AudioPlugin(Plugin):
+    def process(self):
+        print("Processing audio...")
 ```
 
 ### 2. Registration (The "Registry" pattern)

@@ -12,18 +12,41 @@ This is a favorite interview trap.
 *   `__new__(cls, ...)`: **The Constructor**. It allocates memory and returns a new instance of the class. It is a static method (though explicit `@staticmethod` isn't required).
 *   `__init__(self, ...)`: **The Initializer**. It receives the instance created by `__new__` and sets up initial attributes.
 
-**Use Case for `__new__`**:
-1.  **Immutable Types**: You cannot modify `self` in `__init__` for immutable types (like `str`, `int`, `tuple`). You must do it in `__new__`.
-2.  **Singleton Pattern**: Controlling instance creation to return specific objects.
+### Use Case 1: Subclassing Immutable Types
+When subclassing immutable built-ins like `str`, `int`, or `tuple`, the instance is created *before* `__init__` runs. You cannot modify the value in `__init__`. You must intercept it in `__new__`.
 
 ```python
 class UpperString(str):
     def __new__(cls, content):
-        # Must return the super().__new__ instance
+        # The actual string object is created here.
+        # We transform 'content' to uppercase BEFORE creation.
         return super().__new__(cls, content.upper())
 
-s = UpperString("hello")
+    def __init__(self, content):
+        # By the time this runs, self is already "HELLO". 
+        print(f"Init running for {self}")
+
+s = UpperString("hello") 
+# Output: "Init running for HELLO"
 print(s) # "HELLO"
+```
+
+### Use Case 2: The Singleton Pattern
+`__new__` allows you to control *which* object is returned. You can return an existing instance instead of creating a new one.
+
+```python
+class DatabaseConnection:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            print("Creating new connection...")
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+db1 = DatabaseConnection() # "Creating new connection..."
+db2 = DatabaseConnection() # Returns existing instance
+print(db1 is db2) # True
 ```
 
 ---
