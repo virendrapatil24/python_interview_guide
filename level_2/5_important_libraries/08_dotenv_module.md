@@ -2,43 +2,45 @@
 
 Managing configuration via environment variables is the industry standard (The 12-Factor App methodology). `python-dotenv` is the de-facto library for loading these variables from a `.env` file into `os.environ` during development.
 
-> **Note**: This is an external library (`pip install python-dotenv`), unlike the others in this section.
-
 ---
 
-## 1. The 12-Factor App Philosophy
+## 1. Quick Start (Common Usage)
 
-**Principle**: Store config in the environment.
-*   **Why?** Code checks into repo; Config varies across deploys (Dev, Staging, Prod).
-*   **Security**: API keys and DB passwords should NEVER be in source code (git).
+For most projects, this is all you need.
 
-## 2. Using `load_dotenv`
-
-The core function reads a key-value file and adds them to `os.environ`.
-
-**.env file content**:
+**Step 1: Install**
 ```bash
-DATABASE_URL=postgres://user:pass@localhost:5432/db
-DEBUG=True
-API_KEY=secret_123
+pip install python-dotenv
 ```
 
-**Python Code**:
+**Step 2: Create a `.env` file** in your project root.
+```ini
+# .env
+API_KEY=secret_12345
+debug=True
+DATABASE_URL=postgres://user:pass@localhost:5432/db
+```
+
+**Step 3: Load it in Python** (usually in `main.py` or `settings.py`).
 ```python
 import os
 from dotenv import load_dotenv
 
-# 1. Load variables from .env into the environment
-# By default, looks for .env in current directory
-load_dotenv() 
+# Locates the .env file and loads variables into os.environ
+load_dotenv()
 
-# 2. Access them like normal env vars
-db_url = os.getenv("DATABASE_URL")
-api_key = os.environ.get("API_KEY") # Raises KeyError if missing and using []
-
-if os.getenv("DEBUG") == "True":
-    print("Debug mode on")
+# Access them like normal environment variables
+api_key = os.getenv("API_KEY")
+print(f"Key is: {api_key}")
 ```
+
+---
+
+## 2. The 12-Factor App Philosophy
+
+**Principle**: Store config in the environment.
+*   **Why?** Code checks into repo; Config varies across deploys (Dev, Staging, Prod).
+*   **Security**: API keys and DB passwords should NEVER be in source code (git).
 
 ---
 
