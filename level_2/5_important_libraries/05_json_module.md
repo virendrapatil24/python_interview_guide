@@ -4,7 +4,51 @@ JSON is the lingua franca of the web. Python's `json` module is easy to start wi
 
 ---
 
-## 1. Custom Encoders (`default` parameter)
+## 1. The Core 4: Dump vs Dumps, Load vs Loads
+
+This is the most fundamental concept.
+*   **S** suffix = **String**: Operations are done in memory (return or take a string).
+*   **No S** suffix = **Stream (File)**: Operations are done on file objects.
+
+| Method | Direction | Input/Output | Use Case |
+| :--- | :--- | :--- | :--- |
+| `json.dumps(obj)` | Python -> JSON | Returns **String** | Sending JSON to API / Logging / Printing |
+| `json.dump(obj, fp)` | Python -> JSON | Writes to **File** | Saving configuration to disk |
+| `json.loads(str)` | JSON -> Python | Takes **String** | Parsing API response body |
+| `json.load(fp)` | JSON -> Python | Reads from **File** | Reading configuration from disk |
+
+### Examples
+
+```python
+import json
+
+data = {"name": "Alice", "role": "Dev"}
+
+# 1. dumps (String)
+json_str = json.dumps(data, indent=2)
+print(json_str) 
+# Output:
+# {
+#   "name": "Alice",
+#   "role": "Dev"
+# }
+
+# 2. dump (File)
+with open("data.json", "w") as f:
+    json.dump(data, f)
+
+# 3. loads (String)
+obj = json.loads('{"id": 123}')
+print(obj['id']) # 123
+
+# 4. load (File)
+with open("data.json", "r") as f:
+    obj_from_file = json.load(f)
+```
+
+---
+
+## 2. Custom Encoders (`default` parameter)
 
 The `json` serializer only handles basic types (dict, list, str, int, float, bool, None). It fails on `datetime`, `set`, or custom objects.
 
@@ -38,7 +82,7 @@ print(json.dumps(data, cls=CustomEncoder))
 
 ---
 
-## 2. Fast Custom Decoding (Hooks)
+## 3. Fast Custom Decoding (Hooks)
 
 You can convert JSON strings directly into custom objects *during parsing* using hooks. This is faster than parsing to a dict and then converting.
 
@@ -65,7 +109,7 @@ print(type(result['updated_at'])) # <class 'datetime.datetime'>
 
 ---
 
-## 3. `object_pairs_hook` (Duplicate Keys)
+## 4. `object_pairs_hook` (Duplicate Keys)
 
 Standard `json.loads` uses a dict, so if a JSON has duplicate keys, the *last one wins*.
 `{"a": 1, "a": 2}` becomes `{"a": 2}`.
@@ -92,7 +136,7 @@ data = json.loads('{"a": 1, "a": 2}', object_pairs_hook=handle_duplicates)
 
 ---
 
-## 4. Performance: Streaming Large Files
+## 5. Performance: Streaming Large Files
 
 If you have a 2GB JSON file, `json.load(f)` reads the whole thing into memory.
 You cannot stream a *single* massive JSON object effectively with the standard library (use `ijson` for that).
@@ -114,7 +158,7 @@ with open('large_logs.jsonl', 'r') as f:
 
 ---
 
-## 5. Security: `scan` vs `decode`
+## 6. Security: `scan` vs `decode`
 
 `json` is generally safe, but be wary of:
 *   **Recursion Depth**: deeply nested JSON can cause stack overflow.
