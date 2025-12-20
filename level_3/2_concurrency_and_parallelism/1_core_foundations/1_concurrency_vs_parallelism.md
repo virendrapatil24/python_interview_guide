@@ -54,8 +54,6 @@ In CPython (the standard Python implementation), the **Global Interpreter Lock (
 
 ## 4. Pros and Cons
 
-| Feature | Multithreading | Multiprocessing |
-| :--- | :--- | :--- |
 | **Feature** | **Multithreading** | **Multiprocessing** | **AsyncIO** |
 | :--- | :--- | :--- | :--- |
 | **Memory** | Shared (Low) | Separate (High) | Shared (Lowest) |
